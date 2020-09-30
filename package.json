@@ -1,0 +1,36 @@
+{
+  "name": "spotify-migration",
+  "version": "1.0.0",
+  "description": "Migration tool for Spotify.",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf dist/*",
+    "copy-assets": "ts-node tools/copyAssets",
+    "watch": "tsc -w",
+    "dev": "nodemon dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "author": "Ehsaan",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "fast-xml-parser": "^3.17.4",
+    "multer": "^1.4.2",
+    "spotify-web-api-node": "^4.0.0",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.7",
+    "@types/express": "^4.17.8",
+    "@types/fs-extra": "^9.0.1",
+    "@types/multer": "^1.4.4",
+    "@types/node": "^14.11.2",
+    "@types/shelljs": "^0.8.8",
+    "@types/spotify-web-api-node": "^4.0.1",
+    "rimraf": "^3.0.2",
+    "shelljs": "^0.8.4"
+  }
+}

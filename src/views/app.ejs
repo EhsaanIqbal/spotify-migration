@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
+      integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I"
+      crossorigin="anonymous"
+    />
+    <title>Spotify Migration</title>
+  </head>
+
+  <body>
+    <!--main container-->
+    <div class="container">
+      <h1 style="text-align: center; margin-top: 20px">Spotify Migration</h1>
+      <div class="container" style="margin-top: 5vh">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="card" style="width: 18rem">
+              <img
+                src="<%=userInfo.body.images[0].url%>"
+                class="card-img-top"
+                alt="<%=userInfo.body.username%>"
+                width="auto"
+              />
+              <div class="card-body">
+                <h5 class="card-title"><%=userInfo.body.display_name%></h5>
+              </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><%=userInfo.body.email%></li>
+              </ul>
+            </div>
+            <form id="uploadForm">
+              <div
+                class="form-file"
+                style="width: fit-content; margin-top: 20px"
+              >
+                <input
+                  type="file"
+                  class="form-file-input"
+                  id="customFileSm"
+                  name="playlistFile"
+                />
+                <label class="form-file-label" for="customFileSm">
+                  <span class="form-file-text">Select playlists...</span>
+                  <span class="form-file-button">Browse</span>
+                </label>
+              </div>
+            </form>
+          </div>
+          <div class="col">
+            <div class="container">
+              <div class="row">
+                <div class="col">
+                  <h1 style="display: block" id="playlist-title">
+                    No playlist selected!
+                  </h1>
+                  <div
+                    id="loading"
+                    class="spinner-border text-dark"
+                    role="status"
+                    style="width: 5rem; height: 5rem; display: none"
+                  ></div>
+                  <div
+                    style="display: none"
+                    id="card"
+                    class="card"
+                    style="width: 18rem"
+                  >
+                    <div class="card-body">
+                      <h5 id="card-title" class="card-title">Playlist</h5>
+
+                      <a href="#" id="view-link" class="card-link"
+                        >View playlist</a
+                      >
+                      <a href="/app" class="card-link">Another migration</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <button
+                    id="migrate"
+                    style="display: none"
+                    type="button"
+                    class="btn btn-outline-primary btn-lg"
+                  >
+                    Migrate 🚀
+                  </button>
+                </div>
+              </div>
+
+              <ul
+                id="track-list"
+                class="list-group list-group-flush"
+                style="display: none"
+              ></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--end of main container-->
+    </div>
+
+    <!--notifications-->
+    <!--on success-->
+    <div
+      id="notification"
+      style="display: none; width: 20%; position: absolute; top: 20px; right: 0"
+      class="alert alert-success alert-dismissible fade show"
+      role="alert"
+    >
+      <button
+        type="button"
+        class="close"
+        data-dismiss="alert"
+        aria-label="Close"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <!--on fail-->
+    <div
+      id="notification2"
+      style="display: none; width: 20%; position: absolute; top: 20px; right: 0"
+      class="alert alert-danger alert-dismissible fade show"
+      role="alert"
+    >
+      <button
+        type="button"
+        class="close"
+        data-dismiss="alert"
+        aria-label="Close"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <script>
+      const uploadForm = document.getElementById("uploadForm");
+      const notify = document.getElementById("notification");
+      const notify2 = document.getElementById("notification2");
+      const track_list = document.getElementById("track-list");
+      const playlist_title = document.getElementById("playlist-title");
+      const migrate = document.getElementById("migrate");
+      const loading = document.getElementById("loading");
+      const card_title = document.getElementById("card-title");
+      const card = document.getElementById("card");
+      const view_link = document.getElementById("view-link");
+
+      // events
+      uploadForm.addEventListener("change", (e) => handle_upload(e));
+      migrate.addEventListener("click", (e) => handle_migration(e));
+
+      // upload playlist
+      const handle_upload = async (e) => {
+        const files = e.target.files;
+        const formData = new FormData();
+        formData.append("playlistFile", files[0]);
+        try {
+          let res = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+          });
+          let data = await res.json();
+
+          if (data.success) {
+            notify.innerHTML = ` <strong>${data.playlist_name} uploaded successfully!</strong>`;
+            notify.style.display = "block";
+            track_list.style.display = "block";
+            migrate.style.display = "block";
+            let output = "";
+            data.tracks.forEach((t) => {
+              output += `<li class="list-group-item">${t}</li> `;
+            });
+            playlist_title.innerText = data.playlist_name;
+            track_list.innerHTML = output;
+          } else if (!data.success) {
+            notify2.innerHTML = ` <strong>${data.error}</strong>`;
+            notify2.style.display = "block";
+          }
+          setTimeout(() => {
+            notify.style.display = "none";
+            notify2.style.display = "none";
+          }, 4000);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      // init migration
+      const handle_migration = async () => {
+        try {
+          track_list.style.display = "none";
+          migrate.style.display = "none";
+          playlist_title.style.display = "none";
+          loading.style.display = "block";
+          let res = await fetch("/migrate", {
+            method: "GET",
+          });
+          let data = await res.json();
+          console.log(data);
+          if (data.success) {
+            card_title.innerHTML = `${data.playlist_name} migrated!`;
+            view_link.href = data.playlist_link;
+            loading.style.display = "none";
+            card.style.display = "block";
+          } else {
+            playlist_title.innerHTML = `${data.error}`;
+            playlist_title.style.display = "block";
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js"
+      integrity="sha384-oesi62hOLfzrys4LxRF63OJCXdXDipiYWBnvTl9Y9/TRlw5xlKIEHpNyvvDShgf/"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
